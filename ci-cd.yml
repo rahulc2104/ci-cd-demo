@@ -1,0 +1,62 @@
+
+name: Simple CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Website Files
+        run: |
+          test -f index.html
+          test -f style.css
+          echo "Website files are available"
+
+      - name: Validate HTML
+        run: |
+          grep -q "<html" index.html
+          grep -q "</html>" index.html
+          echo "HTML validation successful"
+
+  deploy:
+    name: Deploy Website
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Website
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy Website
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+        
